@@ -1,0 +1,90 @@
+.schedule-header {
+  margin-bottom: 3rem;
+}
+
+.table-container {
+  overflow-x: auto;
+  padding-bottom: 2rem;
+}
+
+.sports-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+}
+
+.sports-table th {
+  padding: 1.5rem;
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent-blue);
+  border-bottom: 1px solid rgba(0, 191, 255, 0.3);
+  background: rgba(10, 15, 44, 0.8);
+}
+
+.sports-table td {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.sports-table tr:last-child td {
+  border-bottom: none;
+}
+
+.table-row {
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.table-row:hover {
+  background: rgba(0, 191, 255, 0.05);
+  transform: scale(1.01);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.table-row:hover td {
+  color: var(--text-primary);
+}
+
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+.highlight {
+  color: var(--accent-orange);
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.sport-badge {
+  background: rgba(255, 106, 0, 0.1);
+  color: var(--accent-orange);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 106, 0, 0.3);
+}
+
+.team-col {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.upcoming-indicator {
+  color: var(--text-secondary);
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 768px) {
+  .sports-table th, .sports-table td {
+    padding: 1rem 0.5rem;
+    font-size: 0.9rem;
+  }
+}

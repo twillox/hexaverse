@@ -1,0 +1,99 @@
+.leaderboard-header {
+  margin-bottom: 3rem;
+}
+
+.leaderboard-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 80px 80px 80px 100px;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+  font-family: var(--font-heading);
+}
+
+.leaderboard-row.header-row {
+  color: var(--accent-blue);
+  text-transform: uppercase;
+  font-weight: 700;
+  border-bottom: 2px solid rgba(0, 191, 255, 0.3);
+  letter-spacing: 1px;
+}
+
+.leaderboard-row:not(.header-row):hover {
+  background: rgba(0, 191, 255, 0.05);
+  transform: translateX(5px);
+}
+
+.col-rank, .col-stat {
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.col-team {
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-align: left;
+}
+
+.team-name-display {
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.highlight-stat {
+  color: var(--accent-orange);
+}
+
+.points-display {
+  font-size: 2rem;
+  text-shadow: 0 0 15px rgba(255, 106, 0, 0.5);
+}
+
+/* Top Team Glow Effect */
+.top-team {
+  position: relative;
+  background: rgba(255, 215, 0, 0.05);
+  border: 1px solid var(--border-glow) !important;
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.2), inset 0 0 15px rgba(255, 215, 0, 0.1);
+  margin-bottom: 1rem;
+}
+
+.top-team::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 4px; height: 100%;
+  background: var(--border-glow);
+  box-shadow: 0 0 10px var(--border-glow);
+  border-radius: 8px 0 0 8px;
+}
+
+@media (max-width: 640px) {
+  .leaderboard-row {
+    grid-template-columns: 40px 1fr 40px 40px 40px 60px;
+    padding: 1rem 0.5rem;
+  }
+  
+  .col-team {
+    font-size: 1.1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .col-rank, .col-stat {
+    font-size: 1rem;
+  }
+  
+  .points-display {
+    font-size: 1.25rem;
+  }
+}

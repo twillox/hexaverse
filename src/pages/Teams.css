@@ -1,0 +1,112 @@
+.page-content {
+  padding-top: 5rem;
+  min-height: calc(100vh - 80px); /* Fill screen minus navbar */
+}
+
+.teams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 3rem;
+  padding-bottom: 5rem;
+}
+
+.team-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3rem 2rem;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.05);
+}
+
+.team-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at 50% -20%, var(--team-glow), transparent 60%);
+  opacity: 0.1;
+  transition: opacity 0.4s ease;
+  z-index: 0;
+}
+
+.team-card:hover {
+  transform: translateY(-15px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 30px var(--team-glow), inset 0 0 20px var(--team-glow);
+  border-color: var(--team-color);
+}
+
+.team-card:hover::before {
+  opacity: 0.3;
+}
+
+.team-icon-wrapper {
+  position: relative;
+  margin-bottom: 1.5rem;
+  z-index: 1;
+}
+
+.team-icon {
+  color: var(--team-color);
+  filter: drop-shadow(0 0 10px var(--team-color));
+  transition: all 0.4s ease;
+}
+
+.team-card:hover .team-icon {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 20px var(--team-color));
+}
+
+.icon-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--team-color);
+  filter: blur(40px);
+  opacity: 0.2;
+  z-index: -1;
+  transition: opacity 0.4s ease;
+}
+
+.team-card:hover .icon-glow {
+  opacity: 0.5;
+}
+
+.team-name {
+  color: var(--text-primary);
+  font-size: 2rem;
+  letter-spacing: 2px;
+  margin-bottom: 0.5rem;
+  z-index: 1;
+  text-shadow: 0 0 10px var(--team-glow);
+}
+
+.team-desc {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.6;
+  z-index: 1;
+}
+
+.team-border-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 4px;
+  background: var(--team-color);
+  box-shadow: 0 0 15px var(--team-color);
+  transition: width 0.4s ease;
+}
+
+.team-card:hover .team-border-bottom {
+  width: 100%;
+}
