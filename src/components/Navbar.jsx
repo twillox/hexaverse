@@ -29,7 +29,7 @@ const Navbar = () => {
       <div className="container nav-container">
         <NavLink to="/" className="brand">
           <img src="/logo.png" alt="Hexaverse Logo" className="brand-logo-img" />
-          <span className="brand-text text-gradient-blue">HEXAVERSE <span className="brand-accent">2.0</span></span>
+          <span className="brand-text text-gradient-blue">HEXAVERSE <span className="brand-accent"></span></span>
         </NavLink>
 
         <div className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`}>
@@ -45,7 +45,7 @@ const Navbar = () => {
           ))}
         </div>
 
-        <button 
+        <button
           className="mobile-toggle"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
