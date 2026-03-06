@@ -49,13 +49,15 @@
   z-index: 1;
 }
 
-.team-icon {
-  color: var(--team-color);
+.team-logo-img {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
   filter: drop-shadow(0 0 10px var(--team-color));
   transition: all 0.4s ease;
 }
 
-.team-card:hover .team-icon {
+.team-card:hover .team-logo-img {
   transform: scale(1.1);
   filter: drop-shadow(0 0 20px var(--team-color));
 }
@@ -86,6 +88,26 @@
   margin-bottom: 0.25rem;
   z-index: 1;
   text-shadow: 0 0 10px var(--team-glow);
+}
+
+.team-stats-row {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 0.75rem;
+  z-index: 1;
+}
+
+.team-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.2rem 0.6rem;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .team-captain {

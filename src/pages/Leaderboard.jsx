@@ -23,10 +23,11 @@ const Leaderboard = () => {
         
         let formattedData = Object.keys(data).map(key => ({
           teamName: key,
-          wins: data[key].wins || 0,
-          losses: data[key].losses || 0,
-          points: data[key].points || 0,
-          matchesPlayed: (data[key].wins || 0) + (data[key].losses || 0)
+          gold: data[key]?.gold || 0,
+          silver: data[key]?.silver || 0,
+          wins: data[key]?.wins || 0,
+          losses: data[key]?.losses || 0,
+          points: data[key]?.points || 0,
         }));
         
         // Sort by points descending
@@ -36,7 +37,7 @@ const Leaderboard = () => {
         // Fallback or empty state
         const defaultTeams = ['VAJRA', 'SAMUDRA', 'VAYU', 'AGNI'];
         setLeaderboardData(defaultTeams.map(t => ({
-          teamName: t, wins: 0, losses: 0, points: 0, matchesPlayed: 0
+          teamName: t, gold: 0, silver: 0, points: 0
         })));
       }
       setLoading(false);
@@ -64,10 +65,18 @@ const Leaderboard = () => {
           <div className="leaderboard-row header-row">
             <div className="col-rank">#</div>
             <div className="col-team">Team</div>
-            <div className="col-stat">MP</div>
-            <div className="col-stat">W</div>
-            <div className="col-stat">L</div>
-            <div className="col-stat highlight-stat">PTS</div>
+            <div className="col-stat">
+              <div className="header-icon">🥇</div>
+              <div className="header-label">Gold</div>
+            </div>
+            <div className="col-stat">
+              <div className="header-icon">🥈</div>
+              <div className="header-label">Silver</div>
+            </div>
+            <div className="col-stat highlight-stat">
+              <div className="header-icon">🔥</div>
+              <div className="header-label">PTS</div>
+            </div>
           </div>
           
           <div className="leaderboard-body">
@@ -87,9 +96,8 @@ const Leaderboard = () => {
                   <div className="col-team team-name-display" style={{ color: teamColor }}>
                     {team.teamName}
                   </div>
-                  <div className="col-stat">{team.matchesPlayed}</div>
-                  <div className="col-stat text-accent-green">{team.wins}</div>
-                  <div className="col-stat text-accent-orange">{team.losses}</div>
+                  <div className="col-stat" style={{ color: '#FFD700' }}>{team.gold}</div>
+                  <div className="col-stat" style={{ color: '#C0C0C0' }}>{team.silver}</div>
                   <div className="col-stat highlight-stat points-display">{team.points}</div>
                 </div>
               );

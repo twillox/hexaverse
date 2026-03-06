@@ -16,11 +16,14 @@ const Admin = () => {
   const [activeTab, setActiveTab] = useState('live'); // 'live', 'schedule', or 'leaderboard'
   const [newTeamName, setNewTeamName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterSport, setFilterSport] = useState('ALL');
 
   // Sports definition
   const SPORTS = [
-    'Cricket', 'Volleyball', 'Basketball', 'Badminton', 
-    '100m Sprint', 'Kabaddi', 'Relay Race', 'Throwball'
+    'Basketball', 'Cricket', 'Volleyball', 'Kabaddi', 
+    'Throwball', '100m Sprint', '200m Sprint', 'Relay Race', 'Badminton',
+    'Carrom', 'Chess'
   ];
 
   // New Match Form State
@@ -108,8 +111,8 @@ const Admin = () => {
     const teamRef = ref(db, `leaderboard/${teamId}`);
     
     set(teamRef, {
-      wins: 0,
-      losses: 0,
+      gold: 0,
+      silver: 0,
       points: 0
     })
     .then(() => {
@@ -120,16 +123,49 @@ const Admin = () => {
     .finally(() => setLoading(false));
   };
 
-  const updateScore = (matchId, team, increment) => {
+  const updateScore = (matchId, team, increment, isWicket = false) => {
     const match = matches.find(m => m.id === matchId);
     if (!match) return;
     
-    const currentScore = team === 'A' ? match.scoreA : match.scoreB;
-    const newScore = Math.max(0, currentScore + increment); // Ensure no negative scores
+    if (isWicket) {
+      const currentWkt = team === 'A' ? (match.scoreWktA || 0) : (match.scoreWktB || 0);
+      const newWkt = Math.max(0, currentWkt + increment);
+      update(ref(db, `matches/${matchId}`), {
+        [team === 'A' ? 'scoreWktA' : 'scoreWktB']: newWkt
+      }).catch(err => alert("Error updating wickets: " + err.message));
+    } else {
+      const currentScore = team === 'A' ? match.scoreA : match.scoreB;
+      const newScore = Math.max(0, currentScore + increment);
+      update(ref(db, `matches/${matchId}`), {
+        [team === 'A' ? 'scoreA' : 'scoreB']: newScore
+      }).catch(err => alert("Error updating score: " + err.message));
+    }
+  };
 
+  const updateSetScore = (matchId, team, setNum, increment) => {
+    const match = matches?.find(m => m.id === matchId);
+    if (!match) return;
+    
+    const field = `score${team}_set${setNum}`;
+    const currentScore = match[field] || 0;
+    const newVal = Math.max(0, currentScore + increment);
+    
     update(ref(db, `matches/${matchId}`), {
-      [team === 'A' ? 'scoreA' : 'scoreB']: newScore
-    }).catch(err => alert("Error updating score: " + err.message));
+      [field]: newVal
+    }).catch(err => alert("Error updating set score: " + err.message));
+  };
+
+  const updateSetWon = (matchId, team, increment) => {
+    const match = matches?.find(m => m.id === matchId);
+    if (!match) return;
+    
+    const field = `setsWon${team}`;
+    const currentVal = match[field] || 0;
+    const newVal = Math.max(0, currentVal + increment);
+    
+    update(ref(db, `matches/${matchId}`), {
+      [field]: newVal
+    }).catch(err => alert("Error updating sets won: " + err.message));
   };
 
   const resetScore = (matchId) => {
@@ -138,13 +174,24 @@ const Admin = () => {
   };
 
   const updateLeaderboardStat = (teamId, stat, increment) => {
-    const team = leaderboard.find(t => t.id === teamId);
+    const team = leaderboard?.find(t => t.id === teamId);
     if (!team) return;
+    
+    const updates = {};
     const currentVal = team[stat] || 0;
     const newVal = Math.max(0, currentVal + increment);
-    update(ref(db, `leaderboard/${teamId}`), {
-      [stat]: newVal
-    }).catch(err => alert("Error updating stat: " + err.message));
+    updates[stat] = newVal;
+
+    // Automated point calculation logic
+    // Gold (5pts) + Silver (3pts) + Wins (2pts)
+    const g = stat === 'gold' ? newVal : (team.gold || 0);
+    const s = stat === 'silver' ? newVal : (team.silver || 0);
+    const w = stat === 'wins' ? newVal : (team.wins || 0);
+    
+    updates['points'] = (g * 5) + (s * 3) + (w * 2);
+
+    update(ref(db, `leaderboard/${teamId}`), updates)
+      .catch(err => alert("Error updating stat: " + err.message));
   };
 
   const toggleStatus = async (matchId, currentStatus) => {
@@ -161,9 +208,21 @@ const Admin = () => {
     }
   };
 
-  // Group Matches by Sport
+  // Filter and Group Matches
+  const filteredMatches = (matches || []).filter(m => {
+    const matchesSearch = !searchTerm || 
+      m.teamA?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      m.teamB?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      m.sport?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      m.venue?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesSport = filterSport === 'ALL' || m.sport === filterSport;
+    
+    return matchesSearch && matchesSport;
+  });
+
   const groupedMatches = SPORTS.reduce((acc, sport) => {
-    acc[sport] = matches.filter(m => m.sport === sport);
+    acc[sport] = filteredMatches.filter(m => m.sport === sport);
     return acc;
   }, {});
 
@@ -230,11 +289,30 @@ const Admin = () => {
         </button>
       </div>
 
-      <div className="admin-grid" style={{ gridTemplateColumns: activeTab === 'leaderboard' ? '1fr' : '1fr 2fr' }}>
+      <div className="admin-grid">
         
         {activeTab === 'live' && (
-          <div className="score-control-section" style={{ gridColumn: '1 / span 2' }}>
-            <h3><Settings size={20} /> Live Score Management</h3>
+          <div className="score-control-section">
+            <div className="section-header-row">
+              <h3><Settings size={20} /> Live Score Management</h3>
+              <div className="admin-filters">
+                <input 
+                  type="text" 
+                  placeholder="Search Match (Team/Sport/Venue)..." 
+                  className="admin-search-input"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <select 
+                  className="admin-sport-filter"
+                  value={filterSport}
+                  onChange={(e) => setFilterSport(e.target.value)}
+                >
+                  <option value="ALL">All Sports</option>
+                  {SPORTS.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            </div>
             <div className="admin-matches-list">
               {matches.length === 0 ? (
                 <p className="text-secondary text-center p-4">No matches available for live updates.</p>
@@ -247,47 +325,278 @@ const Admin = () => {
                     <div key={sport} className="sport-category-group">
                       <h4 className="sport-category-header">{sport}</h4>
                       <div className="sport-matches-grid">
-                        {sportMatches.map(match => (
-                          <div key={match.id} className="glass-panel admin-match-card">
-                            <div className="admin-match-header">
-                              <span className={`status-tag ${match.status.toLowerCase()}`}>{match.status}</span>
-                              <button 
-                                className={`btn-toggle ${match.status === 'LIVE' ? 'is-live-btn' : ''}`}
-                                onClick={() => toggleStatus(match.id, match.status)}
-                                style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}
-                              >
-                                {match.status === 'LIVE' ? 'MARK FINISHED' : 'SET LIVE'}
-                              </button>
-                            </div>
+                        {sportMatches.map(match => {
+                          const getScoreInfo = (sport) => {
+                            const s = sport.toLowerCase();
+                            if (s === 'badminton') return { label: 'Sets', type: 'set' };
+                            if (s === 'volleyball' || s === 'throwball') return { label: 'Sets', type: 'set' };
+                            if (s === 'football') return { label: 'Goals', type: 'goal' };
+                            if (s === 'cricket') return { label: 'Runs/Wkts', type: 'cricket' };
+                            if (s === 'basketball') return { label: 'Points', type: 'basket' };
+                            if (s === 'kabaddi') return { label: 'Points', type: 'points' };
+                            if (s.includes('sprint') || s.includes('relay')) return { label: 'Result', type: 'solo' };
+                            return { label: 'Score', type: 'generic' };
+                          };
+                          
+                          const scoreInfo = getScoreInfo(match.sport);
 
-                            <div className="admin-scorekeeper">
-                              <div className="team-control">
-                                <span className="admin-team-name">{match.teamA}</span>
-                                <div className="score-control-buttons">
-                                  <button className="score-btn minus" onClick={() => updateScore(match.id, 'A', -1)}>-1</button>
-                                  <span className="admin-current-score">{match.scoreA}</span>
-                                  <button className="score-btn plus" onClick={() => updateScore(match.id, 'A', 1)}>+1</button>
+                          return (
+                            <div key={match.id} className={`admin-match-card status-${match.status.toLowerCase()}`}>
+                              {/* 1. TIERED HEADER */}
+                              <div className="admin-match-meta">
+                                <div className="match-info-pill">
+                                  <span className={`status-tag status-${match.status.toLowerCase()}`}>{match.status}</span>
+                                  <span className="match-venue-label">{match.venue} • {match.time}</span>
+                                </div>
+                                <div className="match-actions-row">
+                                  {match.sport.toLowerCase() === 'cricket' && (
+                                    <select 
+                                      className="batting-select"
+                                      value={match.battingTeam || ''}
+                                      onChange={(e) => update(ref(db, `matches/${match.id}`), { battingTeam: e.target.value })}
+                                    >
+                                      <option value="">Who is Batting?</option>
+                                      <option value={match.teamA}>{match.teamA} Batting</option>
+                                      <option value={match.teamB}>{match.teamB} Batting</option>
+                                    </select>
+                                  )}
+                                  <select 
+                                    className="status-select"
+                                    value={match.status}
+                                    onChange={(e) => {
+                                      const newStatus = e.target.value;
+                                      const oldStatus = match.status;
+                                      update(ref(db, `matches/${match.id}`), { status: newStatus });
+                                      
+                                      let winner = null;
+                                      let loser = null;
+                                      const s = match.sport.toLowerCase();
+                                      const isSetSport = s === 'volleyball' || s === 'throwball' || s === 'badminton';
+                                      
+                                      if (match.sport.toLowerCase().includes('sprint') || match.sport.toLowerCase().includes('relay')) {
+                                        winner = match.winnerTeam;
+                                      } else if (isSetSport) {
+                                        if ((match.setsWonA || 0) > (match.setsWonB || 0)) {
+                                          winner = match.teamA;
+                                          loser = match.teamB;
+                                        } else if ((match.setsWonB || 0) > (match.setsWonA || 0)) {
+                                          winner = match.teamB;
+                                          loser = match.teamA;
+                                        }
+                                      } else {
+                                        if (match.scoreA > match.scoreB) {
+                                          winner = match.teamA;
+                                          loser = match.teamB;
+                                        } else if (match.scoreB > match.scoreA) {
+                                          winner = match.teamB;
+                                          loser = match.teamA;
+                                        }
+                                      }
+
+                                      if (oldStatus !== 'FINISHED' && newStatus === 'FINISHED') {
+                                        if (winner) updateLeaderboardStat(winner, 'wins', 1);
+                                        if (loser) updateLeaderboardStat(loser, 'losses', 1);
+                                      } else if (oldStatus === 'FINISHED' && newStatus !== 'FINISHED') {
+                                        if (winner) updateLeaderboardStat(winner, 'wins', -1);
+                                        if (loser) updateLeaderboardStat(loser, 'losses', -1);
+                                      }
+                                    }}
+                                  >
+                                    <option value="UPCOMING">UPCOMING</option>
+                                    <option value="LIVE">LIVE</option>
+                                    <option value="FINISHED">FINISHED</option>
+                                  </select>
                                 </div>
                               </div>
-                              <div className="admin-vs">VS</div>
-                              <div className="team-control">
-                                <span className="admin-team-name">{match.teamB}</span>
-                                <div className="score-control-buttons">
-                                  <button className="score-btn minus" onClick={() => updateScore(match.id, 'B', -1)}>-1</button>
-                                  <span className="admin-current-score">{match.scoreB}</span>
-                                  <button className="score-btn plus" onClick={() => updateScore(match.id, 'B', 1)}>+1</button>
-                                </div>
+
+                              {/* 2. SCOREKEEPER SECTION */}
+                              <div className="admin-scorekeeper">
+                                {scoreInfo.type === 'solo' ? (
+                                  <div className="solo-winner-controls w-100">
+                                    <div className="form-row">
+                                      <div className="form-group">
+                                        <label>Winner Team</label>
+                                        <select 
+                                          value={match.winnerTeam || ''} 
+                                          onChange={(e) => update(ref(db, `matches/${match.id}`), { winnerTeam: e.target.value })}
+                                        >
+                                          <option value="">Select Team</option>
+                                          <option value="VAJRA">VAJRA</option>
+                                          <option value="SAMUDRA">SAMUDRA</option>
+                                          <option value="VAYU">VAYU</option>
+                                          <option value="AGNI">AGNI</option>
+                                        </select>
+                                      </div>
+                                      <div className="form-group">
+                                        <label>Athlete Name</label>
+                                        <input 
+                                          type="text" 
+                                          placeholder="Enter Name"
+                                          value={match.winnerAthlete || ''}
+                                          onChange={(e) => update(ref(db, `matches/${match.id}`), { winnerAthlete: e.target.value })}
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="team-control-row">
+                                    {/* SHARED SET SELECTOR */}
+                                    {scoreInfo.type === 'set' && (
+                                      <div className="shared-match-controls">
+                                        <div className="current-set-selector">
+                                          <label>Active Set (SX)</label>
+                                          <div className="mgmt-btns">
+                                            {[1, 2, 3].map(num => (
+                                              <button 
+                                                key={num}
+                                                className={`score-btn small ${match.currentSet === num ? 'active' : ''}`}
+                                                onClick={() => update(ref(db, `matches/${match.id}`), { currentSet: num })}
+                                              >
+                                                S{num}
+                                              </button>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* TEAM A */}
+                                    <div className="team-control">
+                                      <span className="admin-team-name">{match.teamA}</span>
+                                      <div className="admin-score-actions">
+                                        {scoreInfo.type === 'cricket' ? (
+                                          <div className="cricket-controls-group">
+                                            <div className="score-row">
+                                              <button className="score-btn minus" onClick={() => updateScore(match.id, 'A', -1)}>-1</button>
+                                              <button className="score-btn plus" onClick={() => updateScore(match.id, 'A', 1)}>+1</button>
+                                              <button className="score-btn plus" onClick={() => updateScore(match.id, 'A', 4)}>+4</button>
+                                              <button className="score-btn plus" onClick={() => updateScore(match.id, 'A', 6)}>+6</button>
+                                            </div>
+                                            <div className="wicket-row">
+                                              <button className="score-btn minus wicket-btn" onClick={() => updateScore(match.id, 'A', -1, true)}>-W</button>
+                                              <button className="score-btn plus wicket-btn" onClick={() => updateScore(match.id, 'A', 1, true)}>+W</button>
+                                            </div>
+                                          </div>
+                                        ) : scoreInfo.type === 'set' ? (
+                                          <div className="set-controls-group-modern">
+                                            <div className="active-set-score-mgmt">
+                                              <button className="score-btn minus" onClick={() => updateSetScore(match.id, 'A', match.currentSet || 1, -1)}>-1</button>
+                                              <span className="admin-current-score">
+                                                {match[`scoreA_set${match.currentSet || 1}`] || 0}
+                                              </span>
+                                              <button className="score-btn plus" onClick={() => updateSetScore(match.id, 'A', match.currentSet || 1, 1)}>+1</button>
+                                            </div>
+
+                                            <div className="sets-won-manager">
+                                              <span className="set-mgmt-label">{match.teamA} Sets Won</span>
+                                              <div className="mgmt-btns">
+                                                <button className="score-btn minus small" onClick={() => updateSetWon(match.id, 'A', -1)}>-</button>
+                                                <span className="mgmt-val">{match.setsWonA || 0}</span>
+                                                <button className="score-btn plus small" onClick={() => updateSetWon(match.id, 'A', 1)}>+</button>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        ) : scoreInfo.type === 'basket' ? (
+                                          <div className="score-control-buttons">
+                                            <button className="score-btn plus" onClick={() => updateScore(match.id, 'A', 1)}>+1</button>
+                                            <button className="score-btn plus" onClick={() => updateScore(match.id, 'A', 2)}>+2</button>
+                                            <button className="score-btn plus" onClick={() => updateScore(match.id, 'A', 3)}>+3</button>
+                                          </div>
+                                        ) : (
+                                          <div className="score-control-buttons">
+                                            <button className="score-btn minus" onClick={() => updateScore(match.id, 'A', -1)}>-1</button>
+                                            <span className="admin-current-score">{match.scoreA}</span>
+                                            <button className="score-btn plus" onClick={() => updateScore(match.id, 'A', 1)}>+1</button>
+                                          </div>
+                                        )}
+                                      </div>
+                                      {scoreInfo.type === 'cricket' && (
+                                        <div className="cricket-score-display">
+                                          <span className="admin-current-score">{match.scoreA} / {match.scoreWktA || 0}</span>
+                                        </div>
+                                      )}
+                                      {scoreInfo.type === 'basket' && (
+                                        <span className="admin-current-score">{match.scoreA}</span>
+                                      )}
+                                    </div>
+
+                                    {/* VS DIVIDER */}
+                                    <div className="admin-vs-divider">
+                                      <div className="admin-vs-circle">VS</div>
+                                    </div>
+
+                                    {/* TEAM B */}
+                                    <div className="team-control">
+                                      <span className="admin-team-name">{match.teamB}</span>
+                                      <div className="admin-score-actions">
+                                        {scoreInfo.type === 'cricket' ? (
+                                          <div className="cricket-controls-group">
+                                            <div className="score-row">
+                                              <button className="score-btn minus" onClick={() => updateScore(match.id, 'B', -1)}>-1</button>
+                                              <button className="score-btn plus" onClick={() => updateScore(match.id, 'B', 1)}>+1</button>
+                                              <button className="score-btn plus" onClick={() => updateScore(match.id, 'B', 4)}>+4</button>
+                                              <button className="score-btn plus" onClick={() => updateScore(match.id, 'B', 6)}>+6</button>
+                                            </div>
+                                            <div className="wicket-row">
+                                              <button className="score-btn minus wicket-btn" onClick={() => updateScore(match.id, 'B', -1, true)}>-W</button>
+                                              <button className="score-btn plus wicket-btn" onClick={() => updateScore(match.id, 'B', 1, true)}>+W</button>
+                                            </div>
+                                          </div>
+                                        ) : scoreInfo.type === 'set' ? (
+                                          <div className="set-controls-group-modern">
+                                            <div className="active-set-score-mgmt">
+                                              <button className="score-btn minus" onClick={() => updateSetScore(match.id, 'B', match.currentSet || 1, -1)}>-1</button>
+                                              <span className="admin-current-score">
+                                                {match[`scoreB_set${match.currentSet || 1}`] || 0}
+                                              </span>
+                                              <button className="score-btn plus" onClick={() => updateSetScore(match.id, 'B', match.currentSet || 1, 1)}>+1</button>
+                                            </div>
+
+                                            <div className="sets-won-manager">
+                                              <span className="set-mgmt-label">{match.teamB} Sets Won</span>
+                                              <div className="mgmt-btns">
+                                                <button className="score-btn minus small" onClick={() => updateSetWon(match.id, 'B', -1)}>-</button>
+                                                <span className="mgmt-val">{match.setsWonB || 0}</span>
+                                                <button className="score-btn plus small" onClick={() => updateSetWon(match.id, 'B', 1)}>+</button>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        ) : scoreInfo.type === 'basket' ? (
+                                          <div className="score-control-buttons">
+                                            <button className="score-btn plus" onClick={() => updateScore(match.id, 'B', 1)}>+1</button>
+                                            <button className="score-btn plus" onClick={() => updateScore(match.id, 'B', 2)}>+2</button>
+                                            <button className="score-btn plus" onClick={() => updateScore(match.id, 'B', 3)}>+3</button>
+                                          </div>
+                                        ) : (
+                                          <div className="score-control-buttons">
+                                            <button className="score-btn minus" onClick={() => updateScore(match.id, 'B', -1)}>-1</button>
+                                            <span className="admin-current-score">{match.scoreB}</span>
+                                            <button className="score-btn plus" onClick={() => updateScore(match.id, 'B', 1)}>+1</button>
+                                          </div>
+                                        )}
+                                      </div>
+                                      {scoreInfo.type === 'cricket' && (
+                                        <div className="cricket-score-display">
+                                          <span className="admin-current-score">{match.scoreB} / {match.scoreWktB || 0}</span>
+                                        </div>
+                                      )}
+                                      {scoreInfo.type === 'basket' && (
+                                        <span className="admin-current-score">{match.scoreB}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="admin-match-footer">
+                                <span className="footer-match-type">{match.sport} • {match.status}</span>
+                                <button className="btn btn-secondary btn-sm" onClick={() => resetScore(match.id)}>
+                                  Reset
+                                </button>
                               </div>
                             </div>
-
-                            <div className="admin-match-footer">
-                              <span className="text-secondary" style={{ fontSize: '0.8rem' }}>{match.time} | {match.venue}</span>
-                              <button className="btn btn-secondary btn-sm" onClick={() => resetScore(match.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>
-                                Reset
-                              </button>
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   );
@@ -382,7 +691,7 @@ const Admin = () => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
                           <span className="sport-badge" style={{ fontSize: '0.7rem' }}>{match.sport}</span>
-                          <h4 style={{ margin: '0.5rem 0' }}>{match.teamA} vs {match.teamB}</h4>
+                          <h4 style={{ margin: '0.5rem 0' }}>{match.teamA} Vs {match.teamB}</h4>
                           <span className="text-secondary" style={{ fontSize: '0.8rem' }}>{match.time} | {match.venue}</span>
                         </div>
                         <button 
@@ -436,28 +745,45 @@ const Admin = () => {
                     <h4 className="admin-team-name text-center" style={{ marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>{team.id}</h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span className="text-secondary" style={{ textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>Wins</span>
+                        <span className="text-secondary" style={{ textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>🥇 Gold</span>
                         <div className="score-control-buttons">
+                          <button className="score-btn minus" onClick={() => updateLeaderboardStat(team.id, 'gold', -1)}>-1</button>
+                          <span className="admin-current-score" style={{ fontSize: '1.2rem', minWidth: '30px' }}>{team.gold || 0}</span>
+                          <button className="score-btn plus" onClick={() => updateLeaderboardStat(team.id, 'gold', 1)}>+1</button>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span className="text-secondary" style={{ textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>🥈 Silver</span>
+                        <div className="score-control-buttons">
+                          <button className="score-btn minus" onClick={() => updateLeaderboardStat(team.id, 'silver', -1)}>-1</button>
+                          <span className="admin-current-score" style={{ fontSize: '1.2rem', minWidth: '30px' }}>{team.silver || 0}</span>
+                          <button className="score-btn plus" onClick={() => updateLeaderboardStat(team.id, 'silver', 1)}>+1</button>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span className="text-secondary" style={{ textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px', color: 'var(--accent-green)' }}>🏆 Wins</span>
+                        <div className="score-control-buttons" style={{ borderColor: 'rgba(57, 255, 20, 0.3)' }}>
                           <button className="score-btn minus" onClick={() => updateLeaderboardStat(team.id, 'wins', -1)}>-1</button>
                           <span className="admin-current-score" style={{ fontSize: '1.2rem', minWidth: '30px' }}>{team.wins || 0}</span>
                           <button className="score-btn plus" onClick={() => updateLeaderboardStat(team.id, 'wins', 1)}>+1</button>
                         </div>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span className="text-secondary" style={{ textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>Losses</span>
-                        <div className="score-control-buttons">
+                        <span className="text-secondary" style={{ textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px', color: 'var(--accent-orange)' }}>❌ Loss</span>
+                        <div className="score-control-buttons" style={{ borderColor: 'rgba(255, 106, 0, 0.3)' }}>
                           <button className="score-btn minus" onClick={() => updateLeaderboardStat(team.id, 'losses', -1)}>-1</button>
                           <span className="admin-current-score" style={{ fontSize: '1.2rem', minWidth: '30px' }}>{team.losses || 0}</span>
                           <button className="score-btn plus" onClick={() => updateLeaderboardStat(team.id, 'losses', 1)}>+1</button>
                         </div>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span className="text-secondary" style={{ color: 'var(--accent-green)', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>Points</span>
-                        <div className="score-control-buttons" style={{ borderColor: 'var(--accent-green)' }}>
-                          <button className="score-btn minus" onClick={() => updateLeaderboardStat(team.id, 'points', -1)}>-1</button>
-                          <span className="admin-current-score" style={{ fontSize: '1.2rem', minWidth: '30px', color: 'var(--accent-green)' }}>{team.points || 0}</span>
-                          <button className="score-btn plus" onClick={() => updateLeaderboardStat(team.id, 'points', 1)}>+1</button>
+                        <span className="text-secondary" style={{ color: 'var(--accent-blue)', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>Points</span>
+                        <div className="score-control-buttons" style={{ borderColor: 'var(--accent-blue)', opacity: 0.8 }}>
+                          <span className="admin-current-score" style={{ fontSize: '1.2rem', minWidth: '30px', color: 'var(--accent-blue)', margin: '0.5rem' }}>{team.points || 0}</span>
                         </div>
+                      </div>
+                      <div className="point-info" style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
+                        (G: 5pt | S: 3pt | W: 2pt)
                       </div>
                     </div>
                   </div>

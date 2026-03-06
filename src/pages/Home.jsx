@@ -20,7 +20,7 @@ const Home = () => {
           </p>
           
           <div className="hero-actions">
-            <NavLink to="/live" className="btn btn-primary neon-border">
+            <NavLink to="/fixtures" className="btn btn-primary neon-border">
               <span className="live-dot" style={{ backgroundColor: '#fff', boxShadow: '0 0 10px #fff' }}></span>
               View Live Scores
             </NavLink>

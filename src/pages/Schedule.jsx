@@ -1,10 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { db, ref, onValue } from '../firebase';
+import { useNavigate } from 'react-router-dom';
 import './Schedule.css';
 
 const Schedule = () => {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSport, setSelectedSport] = useState(null);
+  
+  const navigate = useNavigate();
+
+  const SPORTS_CATEGORIES = [
+    { name: 'Basketball', icon: '🏀', color: '#FFD93D' },
+    { name: 'Cricket', icon: '🏏', color: '#A8E6CF' },
+    { name: 'Volleyball', icon: '🏐', color: '#FF6B6B' },
+    { name: 'Kabaddi', icon: '🏃‍♂️', color: '#6C5CE7' },
+    { name: 'Throwball', icon: '🏐', color: '#4ECDC4' },
+    { name: '100m Sprint', icon: '🏃', color: '#FF8A5C' },
+    { name: '200m Sprint', icon: '🏃', color: '#FF6A00' },
+    { name: 'Relay Race', icon: '🏃‍♀️', color: '#FFD93D' },
+    { name: 'Badminton', icon: '🏸', color: '#A8E6CF' },
+    { name: 'Carrom', icon: '🎲', color: '#4ECDC4' },
+    { name: 'Chess', icon: '♟️', color: '#6C5CE7' }
+  ];
 
   useEffect(() => {
     const matchesRef = ref(db, 'matches');
@@ -13,13 +31,10 @@ const Schedule = () => {
     const unsubscribe = onValue(matchesRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
-        // Since schedule includes all matches, we can display them here. 
-        // We could filter out 'FINISHED' matches if desired, but a schedule usually shows all.
         const formattedMatches = Object.keys(data).map(key => ({
           id: key,
           ...data[key]
         })).sort((a, b) => {
-          // Robust sorting with fallbacks
           const timeA = a.time || '';
           const timeB = b.time || '';
           return timeA.localeCompare(timeB);
@@ -38,59 +53,89 @@ const Schedule = () => {
     return () => unsubscribe();
   }, []);
 
+  const filteredMatches = selectedSport 
+    ? matches.filter(m => m.sport && m.sport.toLowerCase() === selectedSport.toLowerCase())
+    : [];
+
   return (
     <div className="container page-content">
       <div className="schedule-header">
         <h1 className="heading-section">
           Match <span className="text-gradient-blue">Schedule</span>
         </h1>
-        <p className="text-secondary text-center">Upcoming and ongoing fixtures for Hexaverse 2.0</p>
+        <p className="text-secondary text-center">
+          {selectedSport ? `Fixtures for ${selectedSport}` : 'Select a sport to view fixtures'}
+        </p>
       </div>
 
       {loading ? (
         <div className="loader">Loading Schedule...</div>
-      ) : matches.length === 0 ? (
-        <div className="no-data glass-panel text-center">
-          <h3>No Fixtures Announced Yet</h3>
-          <p className="text-secondary mt-2">Check back later or refresh the dashboard.</p>
+      ) : !selectedSport ? (
+        <div className="sports-categories-grid">
+          {SPORTS_CATEGORIES.map((sport) => (
+            <div 
+              key={sport.name} 
+              className="sport-card glass-panel"
+              onClick={() => setSelectedSport(sport.name)}
+              style={{ '--sport-color': sport.color }}
+            >
+              <div className="sport-icon">{sport.icon}</div>
+              <h3 className="sport-name">{sport.name}</h3>
+              <div className="sport-card-glow"></div>
+            </div>
+          ))}
         </div>
       ) : (
-        <div className="table-container">
-          <table className="sports-table glass-panel">
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Sport</th>
-                <th>Team A</th>
-                <th>Team B</th>
-                <th>Venue</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {matches.map((match) => (
-                <tr key={match.id} className="table-row">
-                  <td className="font-heading highlight">{match.time}</td>
-                  <td>
-                    <span className="sport-badge">{match.sport}</span>
-                  </td>
-                  <td className="team-col font-heading">{match.teamA}</td>
-                  <td className="team-col font-heading">{match.teamB}</td>
-                  <td className="text-secondary">{match.venue}</td>
-                  <td>
-                    {match.status === 'LIVE' ? (
-                      <span className="live-indicator"><span className="live-dot"></span> LIVE</span>
-                    ) : match.status === 'FINISHED' ? (
-                      <span className="finished-indicator">FINISHED</span>
-                    ) : (
-                      <span className="upcoming-indicator">UPCOMING</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <button className="btn-back" onClick={() => setSelectedSport(null)}>
+            ← Back to Sports
+          </button>
+          
+          {filteredMatches.length === 0 ? (
+            <div className="no-data glass-panel text-center">
+              <h3>No {selectedSport} Fixtures Announced Yet</h3>
+              <p className="text-secondary mt-2">Check back later or choose another sport.</p>
+            </div>
+          ) : (
+            <div className="table-container">
+              <table className="sports-table glass-panel">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>MATCH</th>
+                    <th>Venue</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredMatches.map((match) => (
+                    <tr 
+                      key={match.id} 
+                      className="table-row clickable-row"
+                      onClick={() => navigate(`/fixtures?sport=${match.sport}`)}
+                      title="Click to view match live"
+                    >
+                      <td className="font-heading highlight">{match.time || 'TBD'}</td>
+                      <td className="team-col font-heading">
+                        {(match.teamA || 'Team A')} <span className="vs-text">Vs</span> {(match.teamB || 'Team B')}
+                      </td>
+                      <td className="text-secondary">{match.venue || 'TBD'}</td>
+                      <td>
+                        {match.status === 'LIVE' ? (
+                          <span className="live-indicator"><span className="live-dot"></span> LIVE</span>
+                        ) : match.status === 'FINISHED' ? (
+                          <span className="finished-indicator">FINISHED</span>
+                        ) : (
+                          <span className="upcoming-indicator">UPCOMING</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

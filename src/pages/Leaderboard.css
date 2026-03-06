@@ -11,7 +11,7 @@
 
 .leaderboard-row {
   display: grid;
-  grid-template-columns: 80px 1fr 80px 80px 80px 100px;
+  grid-template-columns: 80px 1fr 140px 140px 160px;
   align-items: center;
   padding: 1.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -79,8 +79,8 @@
 
 @media (max-width: 768px) {
   .leaderboard-row {
-    grid-template-columns: 50px 1fr 45px 45px 45px 60px;
-    padding: 1rem 0.25rem;
+    grid-template-columns: 50px 1fr 80px 80px 90px;
+    padding: 1rem 0.5rem;
     font-size: 0.85rem;
   }
   
@@ -100,8 +100,8 @@
 
 @media (max-width: 480px) {
   .leaderboard-row {
-    grid-template-columns: 35px 1fr 35px 35px 35px 50px;
-    gap: 2px;
+    grid-template-columns: 40px 1fr 60px 60px 60px;
+    gap: 5px;
   }
   
   .col-team {

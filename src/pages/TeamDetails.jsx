@@ -65,6 +65,15 @@ const TeamDetails = () => {
     return <div className="container page-content"><div className="loader">Loading Team Data...</div></div>;
   }
 
+  const teamLogos = {
+    VAJRA: '/vajra.png',
+    SAMUDRA: '/samudra.png',
+    VAYU: '/vayu.png',
+    AGNI: '/agni.png'
+  };
+
+  const teamLogo = teamLogos[teamId] || '/vajra.png';
+
   return (
     <div className="container page-content team-details-page" style={{ '--team-color': teamColor, '--team-glow': `${teamColor}80` }}>
       
@@ -76,7 +85,7 @@ const TeamDetails = () => {
       <div className="team-hero glass-panel">
         <div className="team-hero-content">
           <div className="team-hero-icon">
-            <Shield size={80} color={teamColor} />
+            <img src={teamLogo} alt={`${teamId} Logo`} className="team-hero-logo-img" />
             <div className="hero-icon-glow"></div>
           </div>
           <div className="team-hero-text">
