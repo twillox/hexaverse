@@ -28,7 +28,7 @@ const Navbar = () => {
     <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
       <div className="container nav-container">
         <NavLink to="/" className="brand">
-          <Hexagon className="brand-logo" size={32} />
+          <img src="/logo.png" alt="Hexaverse Logo" className="brand-logo-img" />
           <span className="brand-text text-gradient-blue">HEXAVERSE <span className="brand-accent">2.0</span></span>
         </NavLink>
 

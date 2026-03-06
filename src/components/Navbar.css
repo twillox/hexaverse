@@ -34,10 +34,15 @@
   position: relative;
 }
 
-.brand-logo {
-  color: var(--accent-blue);
-  filter: drop-shadow(0 0 10px var(--accent-blue));
-  animation: pulse 2s infinite ease-in-out;
+.brand-logo-img {
+  height: 48px;
+  width: auto;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.2));
+  transition: transform 0.3s ease;
+}
+
+.brand:hover .brand-logo-img {
+  transform: scale(1.1);
 }
 
 .brand-accent {

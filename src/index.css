@@ -96,7 +96,24 @@ a {
 
 .main-content {
   flex: 1;
-  padding: 6rem 0 4rem; /* For fixed navbar */
+  padding: 5rem 0 3rem; /* Adjusted for mobile */
+}
+
+@media (min-width: 768px) {
+  .main-content {
+    padding: 6rem 0 4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 1.5rem;
+  }
+  
+  .heading-section {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
 }
 
 /* Reusable UI Components */

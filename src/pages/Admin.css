@@ -293,19 +293,42 @@
   margin-top: 0.5rem;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .admin-grid {
     grid-template-columns: 1fr !important;
+    gap: 2rem;
+  }
+  
+  .admin-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .admin-tab-btn {
+    flex-shrink: 0;
+    padding: 0.6rem 1rem;
+    font-size: 0.75rem;
   }
 }
 
 @media (max-width: 480px) {
   .admin-scorekeeper {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: 1.5rem;
   }
   
   .form-row {
     flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .admin-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .admin-team-name {
+    font-size: 1rem;
   }
 }

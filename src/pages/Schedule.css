@@ -85,6 +85,22 @@
 @media (max-width: 768px) {
   .sports-table th, .sports-table td {
     padding: 1rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .team-col {
     font-size: 0.9rem;
+  }
+  
+  .table-container {
+    margin: 0 -0.5rem;
+    padding: 0 0.5rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sports-table th:nth-child(5),
+  .sports-table td:nth-child(5) {
+    display: none; /* Hide venue on very small screens to fit teams */
   }
 }

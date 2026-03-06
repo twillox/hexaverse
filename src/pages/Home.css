@@ -137,6 +137,20 @@
   margin-top: -6rem; /* Overlap hero */
   position: relative;
   z-index: 20;
+  padding-bottom: 5rem;
+}
+
+@media (max-width: 768px) {
+  .features-section {
+    margin-top: 2rem; /* Remove overlap on mobile to prevent layout damage */
+  }
+  
+  .hero {
+    height: auto;
+    min-height: 80vh;
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
 }
 
 .feature-card {

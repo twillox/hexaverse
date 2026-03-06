@@ -18,6 +18,13 @@ const teamMottos = {
   AGNI: 'The fire. Fierce, consuming, and radiant.'
 };
 
+const teamCaptains = {
+  VAJRA: 'Kotte Ashwath',
+  AGNI: 'M.Rohitha Reddy',
+  VAYU: 'Spandan Sahu',
+  SAMUDRA: 'Sarthak Nashine'
+};
+
 const TeamDetails = () => {
   const { teamId } = useParams();
   const [teamStats, setTeamStats] = useState({ points: 0, wins: 0, losses: 0 });
@@ -26,6 +33,7 @@ const TeamDetails = () => {
 
   const teamColor = teamColors[teamId] || '#00BFFF';
   const teamMotto = teamMottos[teamId] || 'Hexaverse Contender';
+  const teamCaptain = teamCaptains[teamId] || 'Team Leader';
 
   useEffect(() => {
     const statsRef = ref(db, `leaderboard/${teamId}`);
@@ -73,6 +81,10 @@ const TeamDetails = () => {
           </div>
           <div className="team-hero-text">
             <h1 className="team-title">{teamId}</h1>
+            <div className="team-captain-detail">
+              <span className="captain-label">Captain:</span>
+              <span className="captain-name">{teamCaptain}</span>
+            </div>
             <p className="team-motto">{teamMotto}</p>
           </div>
         </div>

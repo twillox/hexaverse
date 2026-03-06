@@ -96,6 +96,26 @@
   margin: 0;
 }
 
+.team-captain-detail {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
+
+.captain-label {
+  color: var(--text-secondary);
+}
+
+.captain-name {
+  color: var(--team-color);
+  font-weight: 700;
+  text-shadow: 0 0 10px var(--team-glow);
+}
+
 .team-quick-stats {
   display: flex;
   justify-content: space-around;
@@ -242,6 +262,10 @@
   
   .team-title {
     font-size: 3rem;
+  }
+
+  .team-captain-detail {
+    justify-content: center;
   }
   
   .team-quick-stats {

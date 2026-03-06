@@ -158,7 +158,7 @@
 @media (max-width: 640px) {
   .match-teams-score {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: 1.5rem;
     text-align: center;
   }
   
@@ -168,5 +168,22 @@
   
   .score-display {
     justify-content: center;
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+
+  .team-name {
+    font-size: 1.5rem;
+  }
+
+  .score-number {
+    font-size: 2.5rem;
+  }
+
+  .match-footer {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
   }
 }

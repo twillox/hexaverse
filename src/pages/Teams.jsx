@@ -4,10 +4,10 @@ import { Shield } from 'lucide-react';
 import './Teams.css';
 
 const teamsData = [
-  { id: 'VAJRA', name: 'VAJRA', color: '#FFD700', description: 'The thunderbolt. Indestructible and unyielding force.' },
-  { id: 'SAMUDRA', name: 'SAMUDRA', color: '#00BFFF', description: 'The vast ocean. Deep, relentless, and overpowering.' },
-  { id: 'VAYU', name: 'VAYU', color: '#E0FFFF', description: 'The wind. Swift, unseen, and omnipresent.' },
-  { id: 'AGNI', name: 'AGNI', color: '#FF4500', description: 'The fire. Fierce, consuming, and radiant.' }
+  { id: 'VAJRA', name: 'VAJRA', captain: 'Kotte Ashwath', color: '#FFD700', description: 'The thunderbolt. Indestructible and unyielding force.' },
+  { id: 'SAMUDRA', name: 'SAMUDRA', captain: 'Sarthak Nashine', color: '#00BFFF', description: 'The vast ocean. Deep, relentless, and overpowering.' },
+  { id: 'VAYU', name: 'VAYU', captain: 'Spandan Sahu', color: '#E0FFFF', description: 'The wind. Swift, unseen, and omnipresent.' },
+  { id: 'AGNI', name: 'AGNI', captain: 'M.Rohitha Reddy', color: '#FF4500', description: 'The fire. Fierce, consuming, and radiant.' }
 ];
 
 const Teams = () => {
@@ -36,6 +36,10 @@ const Teams = () => {
               <div className="icon-glow"></div>
             </div>
             <h2 className="team-name">{team.name}</h2>
+            <div className="team-captain">
+              <span className="captain-label">Captain:</span>
+              <span className="captain-name">{team.captain}</span>
+            </div>
             <p className="team-desc">{team.description}</p>
             <div className="team-border-bottom"></div>
           </Link>
