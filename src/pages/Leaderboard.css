@@ -110,5 +110,6 @@
   
   .leaderboard-row.header-row {
     font-size: 0.7rem;
+    word-break: break-all;
   }
 }

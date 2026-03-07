@@ -107,13 +107,25 @@ a {
 
 @media (max-width: 480px) {
   .container {
-    padding: 0 1.5rem;
+    padding: 0 1rem; /* Slightly reduced for ultra-mobile */
   }
   
   .heading-section {
-    font-size: 1.8rem;
-    margin-bottom: 1.5rem;
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+    word-break: break-word; /* Safety for long titles */
   }
+}
+
+/* Global Safety Rules */
+.team-name, .hero-title, .heading-massive, .heading-section {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.glass-panel {
+  max-width: 100%;
+  overflow-x: hidden; /* Prevent horizontal scroll inside panels */
 }
 
 /* Reusable UI Components */
