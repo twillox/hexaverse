@@ -723,11 +723,22 @@ const Admin = () => {
                           <option key={h} value={h}>{h}</option>
                         ))}
                       </select>
-                      <select value={timeMinute} onChange={e => setTimeMinute(e.target.value)} style={{ flex: 1 }}>
-                        {['00', '15', '30', '45'].map(m => (
-                          <option key={m} value={m}>{m}</option>
-                        ))}
-                      </select>
+                      <input 
+                        type="text" 
+                        value={timeMinute} 
+                        onChange={e => {
+                          const val = e.target.value.replace(/\D/g, '');
+                          if (val.length <= 2) {
+                            const num = parseInt(val);
+                            if (!val || (num >= 0 && num <= 59)) {
+                              setTimeMinute(val);
+                            }
+                          }
+                        }}
+                        placeholder="MM"
+                        style={{ flex: 1, textAlign: 'center' }}
+                        maxLength={2}
+                      />
                       <select value={timePeriod} onChange={e => setTimePeriod(e.target.value)} style={{ flex: 1 }}>
                         <option value="AM">AM</option>
                         <option value="PM">PM</option>
