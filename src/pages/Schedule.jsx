@@ -35,8 +35,9 @@ const Schedule = () => {
           id: key,
           ...data[key]
         })).sort((a, b) => {
-          const timeA = a.time || '';
-          const timeB = b.time || '';
+          // Reliable 24h sorting
+          const timeA = a.time || '99:99';
+          const timeB = b.time || '99:99';
           return timeA.localeCompare(timeB);
         });
         
@@ -52,6 +53,16 @@ const Schedule = () => {
 
     return () => unsubscribe();
   }, []);
+
+  const formatTime = (timeStr) => {
+    if (!timeStr) return 'TBD';
+    if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
+    const [hours, minutes] = timeStr.split(':');
+    let h = parseInt(hours);
+    const period = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${h}:${minutes} ${period}`;
+  };
 
   const filteredMatches = selectedSport 
     ? matches.filter(m => m.sport && m.sport.toLowerCase() === selectedSport.toLowerCase())
@@ -115,7 +126,7 @@ const Schedule = () => {
                       onClick={() => navigate(`/fixtures?sport=${match.sport}`)}
                       title="Click to view match live"
                     >
-                      <td className="font-heading highlight">{match.time || 'TBD'}</td>
+                      <td className="font-heading highlight">{formatTime(match.time)}</td>
                       <td className="team-col font-heading">
                         {(match.teamA || 'Team A')} <span className="vs-text">Vs</span> {(match.teamB || 'Team B')}
                       </td>

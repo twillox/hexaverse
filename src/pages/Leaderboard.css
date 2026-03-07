@@ -80,36 +80,47 @@
 @media (max-width: 768px) {
   .leaderboard-row {
     grid-template-columns: 50px 1fr 80px 80px 90px;
-    padding: 1rem 0.5rem;
-    font-size: 0.85rem;
+    padding: 0.8rem 0.4rem;
+    font-size: 0.8rem;
+    font-family: var(--font-body); /* Switch to Inter for better space efficiency */
   }
   
   .col-team {
-    font-size: 1rem;
+    font-size: 0.9rem;
     letter-spacing: 1px;
   }
   
   .points-display {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
   }
 
   .col-rank, .col-stat {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 }
 
 @media (max-width: 480px) {
   .leaderboard-row {
-    grid-template-columns: 40px 1fr 60px 60px 60px;
-    gap: 5px;
+    grid-template-columns: 35px 1fr 50px 50px 55px;
+    gap: 4px;
+    padding: 0.6rem 0.25rem;
   }
   
   .col-team {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
   }
   
   .leaderboard-row.header-row {
-    font-size: 0.7rem;
-    word-break: break-all;
+    font-size: 0.65rem;
+    word-break: break-word;
+  }
+
+  .col-rank, .col-stat {
+    font-size: 0.75rem;
+  }
+
+  .header-label {
+    font-size: 0.6rem;
   }
 }

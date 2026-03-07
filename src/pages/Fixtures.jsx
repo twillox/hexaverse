@@ -42,6 +42,16 @@ const Fixtures = () => {
     return () => unsubscribe();
   }, []);
 
+  const formatTime = (timeStr) => {
+    if (!timeStr) return 'TBD';
+    if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
+    const [hours, minutes] = timeStr.split(':');
+    let h = parseInt(hours);
+    const period = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${h}:${minutes} ${period}`;
+  };
+
   // Sync with URL query params
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -246,7 +256,7 @@ const Fixtures = () => {
                   )}
 
                   <div className="match-footer text-secondary">
-                    <span>{match.time}</span>
+                    <span>{formatTime(match.time)}</span>
                     <span>{match.venue}</span>
                   </div>
                 </div>

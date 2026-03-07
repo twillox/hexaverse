@@ -31,12 +31,16 @@ const Admin = () => {
     sport: SPORTS[0],
     teamA: 'VAJRA',
     teamB: 'SAMUDRA',
-    time: '',
+    time: '10:00', // Default 24h
     venue: '',
     scoreA: 0,
     scoreB: 0,
     status: 'UPCOMING'
   });
+
+  const [timeHour, setTimeHour] = useState('10');
+  const [timeMinute, setTimeMinute] = useState('00');
+  const [timePeriod, setTimePeriod] = useState('AM');
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
@@ -86,17 +90,24 @@ const Admin = () => {
 
   const handleAddMatch = (e) => {
     e.preventDefault();
-    if (!newMatch.sport || !newMatch.time || !newMatch.venue) {
+    
+    // Construct 24h time for storage
+    let hours = parseInt(timeHour);
+    if (timePeriod === 'PM' && hours !== 12) hours += 12;
+    if (timePeriod === 'AM' && hours === 12) hours = 0;
+    const formattedTime = `${hours.toString().padStart(2, '0')}:${timeMinute}`;
+
+    if (!newMatch.sport || !newMatch.venue) {
       alert("Please fill all fields for the new match.");
       return;
     }
     
     setLoading(true);
     const matchesRef = ref(db, 'matches');
-    push(matchesRef, newMatch)
+    push(matchesRef, { ...newMatch, time: formattedTime })
       .then(() => {
         alert("Match added successfully!");
-        setNewMatch({ ...newMatch, sport: SPORTS[0], time: '', venue: '' });
+        setNewMatch({ ...newMatch, sport: SPORTS[0], venue: '' });
       })
       .catch(err => alert("Error adding match: " + err.message))
       .finally(() => setLoading(false));
@@ -198,6 +209,16 @@ const Admin = () => {
     const newStatus = currentStatus === 'LIVE' ? 'FINISHED' : 'LIVE';
     update(ref(db, `matches/${matchId}`), { status: newStatus })
       .catch(err => alert("Error toggling status: " + err.message));
+  };
+
+  const formatTime = (timeStr) => {
+    if (!timeStr) return 'TBD';
+    if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
+    const [hours, minutes] = timeStr.split(':');
+    let h = parseInt(hours);
+    const period = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${h}:${minutes} ${period}`;
   };
 
   const handleDeleteMatch = (matchId) => {
@@ -346,7 +367,7 @@ const Admin = () => {
                               <div className="admin-match-meta">
                                 <div className="match-info-pill">
                                   <span className={`status-tag status-${match.status.toLowerCase()}`}>{match.status}</span>
-                                  <span className="match-venue-label">{match.venue} • {match.time}</span>
+                                  <span className="match-venue-label">{match.venue} • {formatTime(match.time)}</span>
                                 </div>
                                 <div className="match-actions-row">
                                   {match.sport.toLowerCase() === 'cricket' && (
@@ -654,13 +675,23 @@ const Admin = () => {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Time</label>
-                    <input 
-                      type="text" 
-                      placeholder="e.g. 10:00 AM"
-                      value={newMatch.time}
-                      onChange={e => setNewMatch({...newMatch, time: e.target.value})}
-                    />
+                    <label>Time Selection</label>
+                    <div className="time-picker-row" style={{ display: 'flex', gap: '0.5rem' }}>
+                      <select value={timeHour} onChange={e => setTimeHour(e.target.value)} style={{ flex: 1 }}>
+                        {Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0')).map(h => (
+                          <option key={h} value={h}>{h}</option>
+                        ))}
+                      </select>
+                      <select value={timeMinute} onChange={e => setTimeMinute(e.target.value)} style={{ flex: 1 }}>
+                        {['00', '15', '30', '45'].map(m => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                      <select value={timePeriod} onChange={e => setTimePeriod(e.target.value)} style={{ flex: 1 }}>
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                      </select>
+                    </div>
                   </div>
                   <div className="form-group">
                     <label>Venue</label>
@@ -692,7 +723,7 @@ const Admin = () => {
                         <div>
                           <span className="sport-badge" style={{ fontSize: '0.7rem' }}>{match.sport}</span>
                           <h4 style={{ margin: '0.5rem 0' }}>{match.teamA} Vs {match.teamB}</h4>
-                          <span className="text-secondary" style={{ fontSize: '0.8rem' }}>{match.time} | {match.venue}</span>
+                          <span className="text-secondary" style={{ fontSize: '0.8rem' }}>{formatTime(match.time)} | {match.venue}</span>
                         </div>
                         <button 
                           className="btn-icon-danger"
