@@ -4,35 +4,72 @@ import { Shield, Trophy, Crosshair, ChevronDown, ChevronUp } from 'lucide-react'
 import { db, ref, onValue } from '../firebase';
 import './Teams.css';
 
+// Fixed 6 Teams Configuration
+const FIXED_TEAMS = [
+  {
+    id: 'VAJRA',
+    name: 'VAJRA',
+    captain: 'TBD',
+    color: '#FFD700', // Gold/Yellow
+    description: 'The Thunder Warriors - Unyielding and powerful',
+    logo: '/vajra.png'
+  },
+  {
+    id: 'SAMUDRA',
+    name: 'SAMUDRA',
+    captain: 'TBD',
+    color: '#4169E1', // Royal Blue
+    description: 'The Ocean Titans - Deep strength and unity',
+    logo: '/samudra.png'
+  },
+  {
+    id: 'VAYU',
+    name: 'VAYU',
+    captain: 'TBD',
+    color: '#87CEEB', // Sky Blue
+    description: 'The Wind Runners - Swift and unstoppable',
+    logo: '/vayu.png'
+  },
+  {
+    id: 'AGNI',
+    name: 'AGNI',
+    captain: 'TBD',
+    color: '#FF4500', // Orange/Red
+    description: 'The Fire Warriors - Intense and fierce',
+    logo: '/agni.png'
+  },
+  {
+    id: 'HIMADRI',
+    name: 'HIMADRI',
+    captain: 'TBD',
+    color: '#C0C0C0', // Silver
+    description: 'The Mountain Guardians - Steadfast and resilient',
+    logo: '/himadri.png'
+  },
+  {
+    id: 'PRITHVI',
+    name: 'PRITHVI',
+    captain: 'TBD',
+    color: '#8B4513', // Brown/Earth
+    description: 'The Earth Defenders - Strong and grounded',
+    logo: '/prithvi.png'
+  }
+];
+
 const Teams = () => {
   const [stats, setStats] = useState({});
   const [matches, setMatches] = useState([]);
-  const [teams, setTeams] = useState([]);
   const [expandedTeam, setExpandedTeam] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch Teams
-    const teamsRef = ref(db, 'teams');
-    const unsubTeams = onValue(teamsRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const formattedTeams = Object.keys(data).map(key => ({
-          id: key,
-          ...data[key]
-        }));
-        setTeams(formattedTeams);
-      } else {
-        setTeams([]);
-      }
-      setLoading(false);
-    });
-
+    // Use fixed teams instead of fetching from database
     const leaderboardRef = ref(db, 'leaderboard');
     const unsubLeaderboard = onValue(leaderboardRef, (snapshot) => {
       if (snapshot.exists()) {
         setStats(snapshot.val());
       }
+      setLoading(false);
     });
 
     const matchesRef = ref(db, 'matches');
@@ -48,7 +85,6 @@ const Teams = () => {
     });
 
     return () => {
-      unsubTeams();
       unsubLeaderboard();
       unsubMatches();
     };
@@ -83,12 +119,8 @@ const Teams = () => {
             <div className="loading-spinner"></div>
             <p className="text-secondary mt-2">Loading Teams...</p>
           </div>
-        ) : teams.length === 0 ? (
-          <div className="text-center p-4 w-100">
-            <p className="text-secondary">No team profiles found.</p>
-          </div>
         ) : (
-          teams.map((team) => {
+          FIXED_TEAMS.map((team) => {
             const isExpanded = expandedTeam === team.id;
             const teamMatches = getTeamMatches(team.name);
             const teamWins = getTeamWins(team.name);
