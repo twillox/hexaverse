@@ -30,8 +30,12 @@ const Leaderboard = () => {
           points: data[key]?.points || 0,
         }));
         
-        // Sort by points descending
-        formattedData.sort((a, b) => b.points - a.points);
+        // Sort by Points DESC, Gold DESC, Silver DESC
+        formattedData.sort((a, b) => {
+          if (b.points !== a.points) return b.points - a.points;
+          if (b.gold !== a.gold) return b.gold - a.gold;
+          return b.silver - a.silver;
+        });
         setLeaderboardData(formattedData);
       } else {
         // Fallback or empty state
@@ -63,7 +67,7 @@ const Leaderboard = () => {
       ) : (
         <div className="leaderboard-container glass-panel">
           <div className="leaderboard-row header-row">
-            <div className="col-rank">#</div>
+            <div className="col-rank">Rank</div>
             <div className="col-team">Team</div>
             <div className="col-stat">
               <div className="header-icon">🥇</div>
@@ -75,23 +79,29 @@ const Leaderboard = () => {
             </div>
             <div className="col-stat highlight-stat">
               <div className="header-icon">🔥</div>
-              <div className="header-label">PTS</div>
+              <div className="header-label">Points</div>
             </div>
           </div>
           
           <div className="leaderboard-body">
             {leaderboardData.map((team, index) => {
-              const isTop = index === 0;
               const teamColor = teamColors[team.teamName] || '#00BFFF';
               
+              const getRankIcon = (rank) => {
+                if (rank === 0) return <Crown size={24} color="#FFD700" className="pulse-icon" />;
+                if (rank === 1) return <span style={{fontSize: '1.2rem'}}>🥈</span>;
+                if (rank === 2) return <span style={{fontSize: '1.2rem'}}>🥉</span>;
+                return rank + 1;
+              };
+
               return (
                 <div 
                   key={team.teamName} 
-                  className={`leaderboard-row ${isTop ? 'top-team' : ''}`}
+                  className={`leaderboard-row ${index === 0 ? 'top-team' : ''}`}
                   style={{ '--border-glow': teamColor }}
                 >
                   <div className="col-rank">
-                    {isTop ? <Crown size={24} color="#FFD700" className="pulse-icon" /> : index + 1}
+                    {getRankIcon(index)}
                   </div>
                   <div className="col-team team-name-display" style={{ color: teamColor }}>
                     {team.teamName}
@@ -105,6 +115,38 @@ const Leaderboard = () => {
           </div>
         </div>
       )}
+
+      {/* POINTS SYSTEM SECTION */}
+      <div className="leaderboard-header text-center" style={{ marginTop: '4rem' }}>
+        <h2 className="heading-section">
+          POINTS <span className="text-gradient-blue">SYSTEM</span>
+        </h2>
+      </div>
+
+      <div className="leaderboard-container glass-panel" style={{ marginBottom: '4rem' }}>
+        <div className="leaderboard-row header-row" style={{ gridTemplateColumns: 'minmax(120px, 2fr) minmax(120px, 2fr) 1fr 1fr' }}>
+          <div className="col-team" style={{justifyContent: 'flex-start'}}>Category</div>
+          <div className="col-team" style={{justifyContent: 'flex-start'}}>Type</div>
+          <div className="col-stat" style={{ color: '#FFD700' }}>Gold Points</div>
+          <div className="col-stat" style={{ color: '#C0C0C0' }}>Silver Points</div>
+        </div>
+        
+        <div className="leaderboard-body">
+          {[
+            { cat: 'Outdoor', type: 'Team Sport', g: '8 pts', s: '5 pts' },
+            { cat: 'Outdoor', type: 'Single Sport', g: '5 pts', s: '3 pts' },
+            { cat: 'Indoor & Esports', type: 'Team Sport', g: '5 pts', s: '3 pts' },
+            { cat: 'Indoor & Esports', type: 'Single Sport', g: '3 pts', s: '1 pt' }
+          ].map((row, idx) => (
+            <div key={idx} className="leaderboard-row" style={{ gridTemplateColumns: 'minmax(120px, 2fr) minmax(120px, 2fr) 1fr 1fr' }}>
+              <div className="col-team text-secondary" style={{justifyContent: 'flex-start'}}>{row.cat}</div>
+              <div className="col-team" style={{justifyContent: 'flex-start'}}>{row.type}</div>
+              <div className="col-stat" style={{ color: '#FFD700' }}>{row.g}</div>
+              <div className="col-stat" style={{ color: '#C0C0C0' }}>{row.s}</div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

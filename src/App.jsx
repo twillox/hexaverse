@@ -7,6 +7,7 @@ import Schedule from './pages/Schedule';
 import Teams from './pages/Teams';
 import TeamDetails from './pages/TeamDetails';
 import Leaderboard from './pages/Leaderboard';
+import HallOfFame from './pages/HallOfFame';
 import Admin from './pages/Admin';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
             <Route path="/teams" element={<Teams />} />
             <Route path="/teams/:teamId" element={<TeamDetails />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/hall-of-fame" element={<HallOfFame />} />
             <Route path="/admin" element={<Admin />} />
           </Routes>
         </main>

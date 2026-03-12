@@ -21,6 +21,7 @@ const Navbar = () => {
     { name: 'Schedule', path: '/schedule' },
     { name: 'Teams', path: '/teams' },
     { name: 'Leaderboard', path: '/leaderboard' },
+    { name: 'Hall of Fame', path: '/hall-of-fame' },
     { name: 'Admin', path: '/admin' }
   ];
 
