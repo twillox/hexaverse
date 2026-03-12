@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth, ref, onValue, push, update, set, remove } from '../firebase';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
-import { Check, Plus, Code, Settings, Lock, Trash2, List, Trophy, Calendar, Activity } from 'lucide-react';
+import { Check, Plus, Code, Settings, Lock, Trash2, List, Trophy, Calendar, Activity, Shield } from 'lucide-react';
 import './Admin.css';
 
 const Admin = () => {
@@ -13,12 +13,22 @@ const Admin = () => {
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   // Tabs
-  const [activeTab, setActiveTab] = useState('live'); // 'live', 'schedule', or 'leaderboard'
+  const [activeTab, setActiveTab] = useState('live'); // 'live', 'schedule', 'leaderboard', 'teams'
   const [newTeamName, setNewTeamName] = useState('');
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSport, setFilterSport] = useState('ALL');
   const [selectedLiveSport, setSelectedLiveSport] = useState(null);
+
+  const [teams, setTeams] = useState([]);
+  const [localTeamEdits, setLocalTeamEdits] = useState({});
+  const [newTeamProfile, setNewTeamProfile] = useState({
+    id: '',
+    name: '',
+    captain: '',
+    color: '#000000',
+    description: ''
+  });
 
   // Sports definition
   const SPORTS = [
@@ -105,10 +115,37 @@ const Admin = () => {
       }
     });
 
+    const teamsRef = ref(db, 'teams');
+    const unsubscribeTeams = onValue(teamsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const formattedTeams = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+        setTeams(formattedTeams);
+        
+        setLocalTeamEdits(prev => {
+          const newEdits = { ...prev };
+          formattedTeams.forEach(t => {
+            if (!newEdits[t.id]) {
+              newEdits[t.id] = {
+                name: t.name || '',
+                captain: t.captain || '',
+                color: t.color || '#ffffff',
+                description: t.description || ''
+              };
+            }
+          });
+          return newEdits;
+        });
+      } else {
+        setTeams([]);
+      }
+    });
+
     return () => {
       unsubscribeAuth();
       unsubscribeMatches();
       unsubscribeLeaderboard();
+      unsubscribeTeams();
     };
   }, []);
 
@@ -214,6 +251,58 @@ const Admin = () => {
       .finally(() => setLoading(false));
   };
 
+  const handleCreateTeamProfile = (e) => {
+    e.preventDefault();
+    if (!newTeamProfile.id || !newTeamProfile.name) {
+      alert("Team ID and Name are required.");
+      return;
+    }
+    setLoading(true);
+    const id = newTeamProfile.id.toUpperCase();
+    set(ref(db, `teams/${id}`), {
+      name: newTeamProfile.name,
+      captain: newTeamProfile.captain,
+      color: newTeamProfile.color,
+      description: newTeamProfile.description
+    })
+    .then(() => {
+      alert("Team profile created!");
+      setNewTeamProfile({ id: '', name: '', captain: '', color: '#000000', description: '' });
+    })
+    .catch(err => alert("Error creating team: " + err.message))
+    .finally(() => setLoading(false));
+  };
+
+  const handleTeamEditChange = (teamId, field, value) => {
+    setLocalTeamEdits(prev => ({
+      ...prev,
+      [teamId]: {
+        ...prev[teamId],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleUpdateTeamProfile = (teamId) => {
+    const edits = localTeamEdits[teamId];
+    if (!edits) return;
+    update(ref(db, `teams/${teamId}`), {
+      name: edits.name,
+      captain: edits.captain,
+      color: edits.color,
+      description: edits.description
+    })
+    .then(() => alert("Team Profile updated!"))
+    .catch(err => alert("Error updating team: " + err.message));
+  };
+
+  const handleDeleteTeamProfile = (teamId) => {
+    if (window.confirm(`Are you sure you want to delete profile for team ${teamId}?`)) {
+      remove(ref(db, `teams/${teamId}`))
+        .catch(err => alert("Error deleting team: " + err.message));
+    }
+  };
+
   const formatTime = (timeStr) => {
     if (!timeStr) return 'TBD';
     if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
@@ -310,6 +399,12 @@ const Admin = () => {
           onClick={() => setActiveTab('leaderboard')}
         >
           <Trophy size={20} /> Leaderboard Management
+        </button>
+        <button 
+          className={`admin-tab-btn ${activeTab === 'teams' ? 'active' : ''}`}
+          onClick={() => setActiveTab('teams')}
+        >
+          <Shield size={20} /> Team Profiles
         </button>
       </div>
 
@@ -673,7 +768,146 @@ const Admin = () => {
                 </button>
               </div>
             )}
+            </div>
           </div>
+        )}
+
+        {/* TEAM PROFILES MANAGEMENT */}
+        {activeTab === 'teams' && (
+          <div className="admin-teams-container">
+            <div className="glass-panel admin-panel add-team-panel" style={{ height: 'fit-content', marginBottom: '2rem' }}>
+              <h3><Plus size={20}/> Initialize New Team Profile</h3>
+              <form onSubmit={handleCreateTeamProfile} className="admin-form">
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Team ID (e.g. VAJRA)</label>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="VAJRA"
+                      value={newTeamProfile.id}
+                      onChange={e => setNewTeamProfile({...newTeamProfile, id: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Display Name</label>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="VAJRA"
+                      value={newTeamProfile.name}
+                      onChange={e => setNewTeamProfile({...newTeamProfile, name: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Captain Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Kotte Ashwath"
+                      value={newTeamProfile.captain}
+                      onChange={e => setNewTeamProfile({...newTeamProfile, captain: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Theme Color</label>
+                    <input 
+                      type="color" 
+                      style={{ height: '40px', padding: '0.2rem' }}
+                      value={newTeamProfile.color}
+                      onChange={e => setNewTeamProfile({...newTeamProfile, color: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Team Description</label>
+                  <textarea 
+                    rows={2}
+                    placeholder="Enter short team motto..."
+                    value={newTeamProfile.description}
+                    onChange={e => setNewTeamProfile({...newTeamProfile, description: e.target.value})}
+                  />
+                </div>
+                <button type="submit" className="btn btn-primary" disabled={loading}>
+                  {loading ? 'Adding...' : 'Add Team Profile'}
+                </button>
+              </form>
+            </div>
+
+            <div className="glass-panel admin-panel">
+              <h3><Shield size={20} /> Edit Team Profiles</h3>
+              <div className="admin-leaderboard-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', marginTop: '1.5rem' }}>
+                {teams.length === 0 ? (
+                  <p className="text-secondary text-center p-4">No team profiles found.</p>
+                ) : (
+                  teams.map(team => {
+                    const edits = localTeamEdits[team.id] || { name: '', captain: '', color: '#000', description: '' };
+                    return (
+                      <div key={team.id} className="admin-match-card" style={{ borderTopColor: edits.color }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
+                          <h4 className="admin-team-name">{team.id}</h4>
+                          <button 
+                            className="btn-icon-danger"
+                            onClick={() => handleDeleteTeamProfile(team.id)}
+                            title="Delete Team Profile"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span className="text-secondary" style={{ fontSize: '0.85rem' }}>Name</span>
+                            <input 
+                              type="text"
+                              className="admin-search-input"
+                              style={{ width: '60%' }}
+                              value={edits.name}
+                              onChange={e => handleTeamEditChange(team.id, 'name', e.target.value)}
+                            />
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span className="text-secondary" style={{ fontSize: '0.85rem' }}>Captain</span>
+                            <input 
+                              type="text"
+                              className="admin-search-input"
+                              style={{ width: '60%' }}
+                              value={edits.captain}
+                              onChange={e => handleTeamEditChange(team.id, 'captain', e.target.value)}
+                            />
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span className="text-secondary" style={{ fontSize: '0.85rem' }}>Color</span>
+                            <input 
+                              type="color"
+                              className="admin-search-input"
+                              style={{ width: '60%', padding: '0 0.5rem' }}
+                              value={edits.color}
+                              onChange={e => handleTeamEditChange(team.id, 'color', e.target.value)}
+                            />
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                            <span className="text-secondary" style={{ fontSize: '0.85rem' }}>Description</span>
+                            <textarea
+                              className="admin-search-input"
+                              rows="2"
+                              value={edits.description}
+                              onChange={e => handleTeamEditChange(team.id, 'description', e.target.value)}
+                            />
+                          </div>
+                          <button 
+                            className="btn btn-primary btn-sm mt-2" 
+                            onClick={() => handleUpdateTeamProfile(team.id)}
+                          >
+                            Update Profile
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
