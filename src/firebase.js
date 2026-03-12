@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, onValue, set, push, update, remove } from 'firebase/database';
 import { getAuth } from 'firebase/auth';
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // Your web app's Firebase configuration
 // Replace these with your actual Firebase config
@@ -18,5 +19,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
+const storage = getStorage(app);
 
-export { db, auth, ref, onValue, set, push, update, remove };
+export { db, auth, storage, ref, sRef, onValue, set, push, update, remove, uploadBytes, getDownloadURL };

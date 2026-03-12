@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { db, auth, ref, onValue, push, update, set, remove } from '../firebase';
+import { db, auth, storage, ref, sRef, onValue, push, update, set, remove, uploadBytes, getDownloadURL } from '../firebase';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
-import { Check, Plus, Code, Settings, Lock, Trash2, List, Trophy, Calendar, Activity, Shield } from 'lucide-react';
+import { Check, Plus, Code, Settings, Lock, Trash2, List, Trophy, Calendar, Activity, Shield, Upload, Image as ImageIcon } from 'lucide-react';
 import './Admin.css';
 
 const Admin = () => {
@@ -300,6 +300,29 @@ const Admin = () => {
     if (window.confirm(`Are you sure you want to delete profile for team ${teamId}?`)) {
       remove(ref(db, `teams/${teamId}`))
         .catch(err => alert("Error deleting team: " + err.message));
+    }
+  };
+
+  const handleUploadLogo = async (teamId, file) => {
+    if (!file) return;
+    
+    setLoading(true);
+    try {
+      const storageRef = sRef(storage, `team_logos/${teamId}_${Date.now()}`);
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      // Update the team profile with the new logo URL
+      await update(ref(db, `teams/${teamId}`), {
+        logo: downloadURL
+      });
+      
+      alert("Logo uploaded successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Error uploading logo: " + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -829,6 +852,19 @@ const Admin = () => {
                     onChange={e => setNewTeamProfile({...newTeamProfile, description: e.target.value})}
                   />
                 </div>
+                <div className="form-group">
+                  <label>Initial Team Icon (Optional)</label>
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={e => {
+                      const file = e.target.files[0];
+                      if (file) handleUploadLogo(newTeamProfile.id || 'NEW_TEAM', file);
+                    }}
+                    disabled={!newTeamProfile.id}
+                  />
+                  {!newTeamProfile.id && <p className="text-secondary" style={{ fontSize: '0.75rem' }}>* Set Team ID first to enable auto-upload</p>}
+                </div>
                 <button type="submit" className="btn btn-primary" disabled={loading}>
                   {loading ? 'Adding...' : 'Add Team Profile'}
                 </button>
@@ -895,9 +931,40 @@ const Admin = () => {
                               onChange={e => handleTeamEditChange(team.id, 'description', e.target.value)}
                             />
                           </div>
+                          
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span className="text-secondary" style={{ fontSize: '0.85rem' }}>Team Logo</span>
+                              {team.logo ? (
+                                <img src={team.logo} alt="Logo" style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }} />
+                              ) : (
+                                <ImageIcon size={20} className="text-secondary" />
+                              )}
+                            </div>
+                            <input 
+                              type="file" 
+                              id={`upload-${team.id}`}
+                              style={{ display: 'none' }} 
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) handleUploadLogo(team.id, file);
+                              }}
+                            />
+                            <button 
+                              className="btn-toggle w-100" 
+                              style={{ padding: '0.4rem', fontSize: '0.8rem' }}
+                              onClick={() => document.getElementById(`upload-${team.id}`).click()}
+                              disabled={loading}
+                            >
+                              <Upload size={14} /> {team.logo ? 'Change Logo' : 'Upload Logo'}
+                            </button>
+                          </div>
+
                           <button 
                             className="btn btn-primary btn-sm mt-2" 
                             onClick={() => handleUpdateTeamProfile(team.id)}
+                            disabled={loading}
                           >
                             Update Profile
                           </button>
