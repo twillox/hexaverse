@@ -9,7 +9,7 @@ const FIXED_TEAMS = [
   {
     id: 'VAJRA',
     name: 'VAJRA',
-    captain: 'TBD',
+    captain: 'E AKHIL VIGNESH',
     color: '#FFD700', // Gold/Yellow
     description: 'The Thunder Warriors - Unyielding and powerful',
     logo: '/vajra.png'
@@ -17,7 +17,7 @@ const FIXED_TEAMS = [
   {
     id: 'SAMUDRA',
     name: 'SAMUDRA',
-    captain: 'TBD',
+    captain: 'B NANDHINI',
     color: '#4169E1', // Royal Blue
     description: 'The Ocean Titans - Deep strength and unity',
     logo: '/samudra.png'
@@ -25,7 +25,7 @@ const FIXED_TEAMS = [
   {
     id: 'VAYU',
     name: 'VAYU',
-    captain: 'TBD',
+    captain: 'R RISHITH',
     color: '#87CEEB', // Sky Blue
     description: 'The Wind Runners - Swift and unstoppable',
     logo: '/vayu.png'
@@ -33,7 +33,7 @@ const FIXED_TEAMS = [
   {
     id: 'AGNI',
     name: 'AGNI',
-    captain: 'TBD',
+    captain: 'KHUSHAL CHOWDARY',
     color: '#FF4500', // Orange/Red
     description: 'The Fire Warriors - Intense and fierce',
     logo: '/agni.png'
@@ -41,7 +41,7 @@ const FIXED_TEAMS = [
   {
     id: 'HIMADRI',
     name: 'HIMADRI',
-    captain: 'TBD',
+    captain: 'A MAHESH CHOWDARY',
     color: '#C0C0C0', // Silver
     description: 'The Mountain Guardians - Steadfast and resilient',
     logo: '/himadri.png'
@@ -49,7 +49,7 @@ const FIXED_TEAMS = [
   {
     id: 'PRITHVI',
     name: 'PRITHVI',
-    captain: 'TBD',
+    captain: 'L ESHWAR ABHISHEK',
     color: '#8B4513', // Brown/Earth
     description: 'The Earth Defenders - Strong and grounded',
     logo: '/prithvi.png'
