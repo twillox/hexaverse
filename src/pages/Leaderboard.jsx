@@ -5,19 +5,23 @@ import './Leaderboard.css';
 
 const teamColors = {
   VAJRA: '#FFD700',
-  SAMUDRA: '#00BFFF',
-  VAYU: '#E0FFFF',
-  AGNI: '#FF4500'
+  SAMUDRA: '#4169E1',
+  VAYU: '#87CEEB',
+  AGNI: '#FF4500',
+  HIMADRI: '#C0C0C0',
+  PRITHVI: '#8B4513'
 };
 
 const Leaderboard = () => {
   const [leaderboardData, setLeaderboardData] = useState([]);
+  const [pointSystem, setPointSystem] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const leaderboardRef = ref(db, 'leaderboard');
+    const pointsRef = ref(db, 'pointSystem');
     
-    const unsubscribe = onValue(leaderboardRef, (snapshot) => {
+    const unsubscribeLeaderboard = onValue(leaderboardRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
         
@@ -38,8 +42,8 @@ const Leaderboard = () => {
         });
         setLeaderboardData(formattedData);
       } else {
-        // Fallback or empty state
-        const defaultTeams = ['VAJRA', 'SAMUDRA', 'VAYU', 'AGNI'];
+        // Fallback or empty state - All 6 teams
+        const defaultTeams = ['VAJRA', 'SAMUDRA', 'VAYU', 'AGNI', 'HIMADRI', 'PRITHVI'];
         setLeaderboardData(defaultTeams.map(t => ({
           teamName: t, gold: 0, silver: 0, points: 0
         })));
@@ -50,7 +54,28 @@ const Leaderboard = () => {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    const unsubscribePoints = onValue(pointsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setPointSystem(snapshot.val());
+      } else {
+        // Default point system
+        setPointSystem({
+          outdoorTeamGold: 8,
+          outdoorTeamSilver: 5,
+          outdoorSingleGold: 5,
+          outdoorSingleSilver: 3,
+          indoorTeamGold: 5,
+          indoorTeamSilver: 3,
+          indoorSingleGold: 3,
+          indoorSingleSilver: 1
+        });
+      }
+    });
+
+    return () => {
+      unsubscribeLeaderboard();
+      unsubscribePoints();
+    };
   }, []);
 
   return (
@@ -132,11 +157,11 @@ const Leaderboard = () => {
         </div>
         
         <div className="leaderboard-body">
-          {[
-            { cat: 'Outdoor', type: 'Team Sport', g: '8 pts', s: '5 pts' },
-            { cat: 'Outdoor', type: 'Single Sport', g: '5 pts', s: '3 pts' },
-            { cat: 'Indoor & Esports', type: 'Team Sport', g: '5 pts', s: '3 pts' },
-            { cat: 'Indoor & Esports', type: 'Single Sport', g: '3 pts', s: '1 pt' }
+          {pointSystem && [
+            { cat: 'Outdoor', type: 'Team Sport', g: `${pointSystem.outdoorTeamGold} pts`, s: `${pointSystem.outdoorTeamSilver} pts` },
+            { cat: 'Outdoor', type: 'Single Sport', g: `${pointSystem.outdoorSingleGold} pts`, s: `${pointSystem.outdoorSingleSilver} pts` },
+            { cat: 'Indoor & Esports', type: 'Team Sport', g: `${pointSystem.indoorTeamGold} pts`, s: `${pointSystem.indoorTeamSilver} pts` },
+            { cat: 'Indoor & Esports', type: 'Single Sport', g: `${pointSystem.indoorSingleGold} pts`, s: `${pointSystem.indoorSingleSilver} pts` }
           ].map((row, idx) => (
             <div key={idx} className="leaderboard-row" style={{ gridTemplateColumns: 'minmax(120px, 2fr) minmax(120px, 2fr) 1fr 1fr' }}>
               <div className="col-team text-secondary" style={{justifyContent: 'flex-start'}}>{row.cat}</div>

@@ -13,16 +13,54 @@ const Admin = () => {
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   // Tabs
-  const [activeTab, setActiveTab] = useState('live'); // 'live', 'schedule', 'leaderboard'
+  const [activeTab, setActiveTab] = useState('live'); // 'live', 'schedule', 'leaderboard', 'points'
   const [newTeamName, setNewTeamName] = useState('');
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSport, setFilterSport] = useState('ALL');
   const [selectedLiveSport, setSelectedLiveSport] = useState(null);
 
-  const [teams, setTeams] = useState([]);
+  // Point System State
+  const [pointSystem, setPointSystem] = useState({
+    outdoorTeamGold: 8,
+    outdoorTeamSilver: 5,
+    outdoorSingleGold: 5,
+    outdoorSingleSilver: 3,
+    indoorTeamGold: 5,
+    indoorTeamSilver: 3,
+    indoorSingleGold: 3,
+    indoorSingleSilver: 1
+  });
 
+  // Initialize all 6 teams if they don't exist
+  useEffect(() => {
+    const sixTeams = ['VAJRA', 'SAMUDRA', 'VAYU', 'AGNI', 'HIMADRI', 'PRITHVI'];
+    const checks = sixTeams.map(teamId => {
+      const teamRef = ref(db, `leaderboard/${teamId}`);
+      return onValue(teamRef, (snapshot) => {
+        if (!snapshot.exists()) {
+          set(ref(db, `leaderboard/${teamId}`), {
+            gold: 0,
+            silver: 0,
+            points: 0
+          });
+        }
+      });
+    });
 
+    // Load point system
+    const pointsRef = ref(db, 'pointSystem');
+    const unsubPoints = onValue(pointsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setPointSystem(snapshot.val());
+      }
+    });
+
+    return () => {
+      checks.forEach(unsub => unsub());
+      unsubPoints();
+    };
+  }, []);
   // Sports definition
   const SPORTS = [
     'Basketball', 'Cricket', 'Volleyball', 'Kabaddi', 
@@ -240,6 +278,14 @@ const Admin = () => {
 
 
 
+  const handleSavePointSystem = () => {
+    setLoading(true);
+    update(ref(db, 'pointSystem'), pointSystem)
+      .then(() => alert("Point system updated successfully!"))
+      .catch(err => alert("Error updating point system: " + err.message))
+      .finally(() => setLoading(false));
+  };
+
   const formatTime = (timeStr) => {
     if (!timeStr) return 'TBD';
     if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
@@ -336,6 +382,12 @@ const Admin = () => {
           onClick={() => setActiveTab('leaderboard')}
         >
           <Trophy size={20} /> Leaderboard Management
+        </button>
+        <button 
+          className={`admin-tab-btn ${activeTab === 'points' ? 'active' : ''}`}
+          onClick={() => setActiveTab('points')}
+        >
+          <Settings size={20} /> Point System
         </button>
       </div>
 
@@ -703,7 +755,120 @@ const Admin = () => {
           </div>
         )}
 
+        {/* POINT SYSTEM MANAGEMENT */}
+        {activeTab === 'points' && (
+          <div className="admin-points-container">
+            <div className="glass-panel admin-panel" style={{ maxWidth: '800px', margin: '0 auto' }}>
+              <h3><Settings size={20} /> Tournament Point System Configuration</h3>
+              <p className="text-secondary" style={{ marginBottom: '2rem' }}>Configure points awarded for Gold and Silver in different sport categories</p>
+              
+              <div className="points-config-grid">
+                {/* OUTDOOR TEAM SPORTS */}
+                <div className="point-category-card glass-panel">
+                  <h4 style={{ color: 'var(--accent-blue)', marginBottom: '1rem', borderBottom: '1px solid rgba(0, 191, 255, 0.3)', paddingBottom: '0.5rem' }}>Outdoor - Team Sports</h4>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>🥇 Gold Medal Points</label>
+                      <input 
+                        type="number"
+                        value={pointSystem.outdoorTeamGold}
+                        onChange={(e) => setPointSystem({...pointSystem, outdoorTeamGold: Number(e.target.value)})}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>🥈 Silver Medal Points</label>
+                      <input 
+                        type="number"
+                        value={pointSystem.outdoorTeamSilver}
+                        onChange={(e) => setPointSystem({...pointSystem, outdoorTeamSilver: Number(e.target.value)})}
+                      />
+                    </div>
+                  </div>
+                </div>
 
+                {/* OUTDOOR SINGLE SPORTS */}
+                <div className="point-category-card glass-panel">
+                  <h4 style={{ color: 'var(--accent-green)', marginBottom: '1rem', borderBottom: '1px solid rgba(57, 255, 20, 0.3)', paddingBottom: '0.5rem' }}>Outdoor - Single Sports</h4>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>🥇 Gold Medal Points</label>
+                      <input 
+                        type="number"
+                        value={pointSystem.outdoorSingleGold}
+                        onChange={(e) => setPointSystem({...pointSystem, outdoorSingleGold: Number(e.target.value)})}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>🥈 Silver Medal Points</label>
+                      <input 
+                        type="number"
+                        value={pointSystem.outdoorSingleSilver}
+                        onChange={(e) => setPointSystem({...pointSystem, outdoorSingleSilver: Number(e.target.value)})}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* INDOOR TEAM SPORTS */}
+                <div className="point-category-card glass-panel">
+                  <h4 style={{ color: 'var(--accent-orange)', marginBottom: '1rem', borderBottom: '1px solid rgba(255, 106, 0, 0.3)', paddingBottom: '0.5rem' }}>Indoor & Esports - Team Sports</h4>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>🥇 Gold Medal Points</label>
+                      <input 
+                        type="number"
+                        value={pointSystem.indoorTeamGold}
+                        onChange={(e) => setPointSystem({...pointSystem, indoorTeamGold: Number(e.target.value)})}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>🥈 Silver Medal Points</label>
+                      <input 
+                        type="number"
+                        value={pointSystem.indoorTeamSilver}
+                        onChange={(e) => setPointSystem({...pointSystem, indoorTeamSilver: Number(e.target.value)})}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* INDOOR SINGLE SPORTS */}
+                <div className="point-category-card glass-panel">
+                  <h4 style={{ color: '#FF1493', marginBottom: '1rem', borderBottom: '1px solid rgba(255, 20, 147, 0.3)', paddingBottom: '0.5rem' }}>Indoor & Esports - Single Sports</h4>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>🥇 Gold Medal Points</label>
+                      <input 
+                        type="number"
+                        value={pointSystem.indoorSingleGold}
+                        onChange={(e) => setPointSystem({...pointSystem, indoorSingleGold: Number(e.target.value)})}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>🥈 Silver Medal Points</label>
+                      <input 
+                        type="number"
+                        value={pointSystem.indoorSingleSilver}
+                        onChange={(e) => setPointSystem({...pointSystem, indoorSingleSilver: Number(e.target.value)})}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+                <button 
+                  className="btn btn-primary" 
+                  style={{ padding: '0.8rem 2rem', fontSize: '1.1rem' }} 
+                  onClick={handleSavePointSystem}
+                  disabled={loading}
+                >
+                  {loading ? 'Saving...' : 'Save Point System'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

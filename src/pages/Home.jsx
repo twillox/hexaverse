@@ -41,7 +41,7 @@ const Home = () => {
       <section className="container features-section">
         <div className="glass-panel feature-card">
           <Trophy size={40} className="feature-icon text-accent-orange" color="var(--accent-orange)" />
-          <h3>4 Elite Teams</h3>
+          <h3>6 Elite Teams</h3>
           <p>Battling for ultimate supremacy in the Hexaverse.</p>
         </div>
         <div className="glass-panel feature-card">
